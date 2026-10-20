@@ -26,6 +26,12 @@ class DMC_Util {
 
 	const BASE_EXTS = 'jpg jpeg jpe png gif webp avif bmp tif tiff ico svg heic heif mp4 m4v mov webm ogv avi wmv mpg mpeg 3gp mp3 m4a wav ogg oga flac aac pdf doc docx ppt pptx pps ppsx xls xlsx odt ods odp rtf hwp hwpx zip psd key ttf otf woff woff2 eot html htm txt csv json xml vtt srt epub rar 7z gz';
 
+	/** Upper bound on nodes visited while walking one stored value. */
+	const MAX_WALK_NODES = 200000;
+
+	private static $walk_seen  = array();
+	private static $walk_nodes = 0;
+
 	private static $settings = null;
 	private static $ext_re   = null;
 	private static $exts     = null;
@@ -443,8 +449,22 @@ class DMC_Util {
 	 * @param bool $numeric_any Treat a bare number as an attachment ID even if the key does not look media-related.
 	 */
 	public static function walk( $value, $path, array &$refs, $source, $numeric_any = false, $depth = 0 ) {
-		if ( $depth > 25 ) {
+		if ( 0 === $depth ) {
+			self::$walk_seen  = array();
+			self::$walk_nodes = 0;
+		}
+		// Serialized objects can point back to themselves (r:/R: references, e.g.
+		// Duplicator's package option); without these guards the walk revisits
+		// the same branches millions of times and the scan never finishes.
+		if ( $depth > 25 || ++self::$walk_nodes > self::MAX_WALK_NODES ) {
 			return;
+		}
+		if ( is_object( $value ) ) {
+			$oid = spl_object_id( $value );
+			if ( isset( self::$walk_seen[ $oid ] ) ) {
+				return;
+			}
+			self::$walk_seen[ $oid ] = true;
 		}
 		if ( is_array( $value ) || is_object( $value ) ) {
 			// Numbers inside serialized arrays (ACF galleries, repeaters…) inherit
