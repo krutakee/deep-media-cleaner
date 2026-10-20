@@ -2,7 +2,7 @@
 Contributors: Stan Han
 Requires at least: 5.8
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 
 Finds media that is not used anywhere on the site and moves it to a restorable recycle bin.
@@ -56,3 +56,15 @@ A library item is marked "File missing" when its entry still exists but the file
     wp dmc bin
     wp dmc restore <bin-id>... | --all
     wp dmc delete <bin-id>... | --all [--yes]
+
+== Changelog ==
+
+= 1.5.1 =
+* Fix: the scan could hang forever on settings that store an object pointing back to itself (e.g. a leftover Duplicator package).
+* Fix: after a cancelled or interrupted scan, every library item was shown as unused and could be moved. Moving, ignoring and the WP-CLI list, stats and trash commands now wait for a finished scan.
+* Fix: moving an item to the bin could also move thumbnails of a different, used item with the same base name (e.g. logo.svg and logo.png).
+* Fix: links to file types missing from the extension list (e.g. .pages) and names like "Resume.docx-2.pdf" were not recognised, so those files looked unused.
+* Change: Instagram Feed's image cache folder (sb-instagram-feed-images) is skipped by default.
+
+= 1.5.0 =
+* First version in the GitHub repository.
