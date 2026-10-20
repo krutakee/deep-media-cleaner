@@ -1,0 +1,78 @@
+.dmc-box { background: #fff; border: 1px solid #c3c4c7; padding: 4px 20px; margin: 16px 0; }
+.dmc-scanbox { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+.dmc-scan-main { flex: 1 1 380px; }
+.dmc-scan-side { flex: 0 1 320px; border-left: 3px solid #dba617; padding-left: 16px; margin: 12px 0; }
+.dmc-scan-side ul { list-style: disc; margin-left: 18px; }
+.dmc-summary { font-size: 15px; }
+.dmc-progress { max-width: 640px; }
+.dmc-bar { height: 10px; background: #f0f0f1; border-radius: 5px; overflow: hidden; }
+.dmc-bar span { display: block; height: 100%; background: #2271b1; transition: width .4s ease; }
+.dmc-search { float: right; margin: 6px 0; }
+.dmc-actions { clear: both; height: auto; }
+.dmc-table .dmc-col-thumb { width: 64px; }
+.dmc-thumb { width: 56px; height: 56px; object-fit: cover; border: 1px solid #dcdcde; background: #f6f7f7; }
+.dmc-icon { font-size: 40px; width: 56px; height: 56px; color: #8c8f94; }
+.dmc-table td, .dmc-table th { vertical-align: top; }
+.dmc-table .row-actions { left: 0; }
+.dmc-note { color: #50575e; max-width: 360px; word-break: break-word; }
+.dmc-badge { display: inline-block; font-size: 11px; line-height: 1.6; padding: 0 6px; border-radius: 3px; vertical-align: middle; }
+.dmc-badge-lib { background: #e7f0f8; color: #135e96; }
+.dmc-badge-file { background: #fcf0e3; color: #8a4b00; }
+.button.dmc-danger { color: #b32d2e; border-color: #b32d2e; }
+.button.dmc-danger:hover { background: #fcf0f1; color: #8a2424; border-color: #8a2424; }
+.dmc-danger-link { color: #b32d2e; }
+.dmc-help { margin: 0 0 8px 24px !important; }
+body.dmc-busy { cursor: progress; }
+@media (max-width: 782px) {
+	.dmc-search { float: none; }
+	.dmc-scan-side { border-left: 0; padding-left: 0; }
+}
+
+/* Progress panel for long jobs */
+.dmc-job { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; background: rgba(240, 240, 241, .72); }
+.dmc-job-box { width: min(460px, calc(100vw - 32px)); background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1; padding: 8px 24px 12px; box-shadow: 0 6px 24px rgba(0, 0, 0, .12); }
+.dmc-job-title { font-size: 15px; font-weight: 600; margin: 12px 0; }
+.dmc-job .dmc-bar { height: 14px; border-radius: 7px; }
+.dmc-job-count { font-size: 14px; font-variant-numeric: tabular-nums; margin: 10px 0 2px; }
+.dmc-job-eta { color: #50575e; margin: 0 0 8px; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .dmc-bar span { transition: none; } }
+
+/* Summary after a job */
+.dmc-job-summary { width: min(620px, calc(100vw - 32px)); }
+.dmc-job-listhead { font-weight: 600; margin: 14px 0 6px; }
+.dmc-job-list { max-height: 45vh; overflow-y: auto; margin: 0; padding: 0; border: 1px solid #dcdcde; background: #f6f7f7; }
+.dmc-job-list li { margin: 0; padding: 7px 10px; border-bottom: 1px solid #e5e5e5; word-break: break-word; }
+.dmc-job-list li:last-child { border-bottom: 0; }
+.dmc-job-list strong { display: block; font-weight: 600; }
+.dmc-job-list span { color: #50575e; }
+.dmc-job-hint { color: #50575e; margin: 10px 0 0; }
+.dmc-job-btns { margin-top: 14px; }
+
+/* Reasons */
+.dmc-note code, .dmc-job-list code { font-size: 12px; padding: 1px 4px; background: #f0f0f1; word-break: break-all; }
+.dmc-warn { color: #996800; font-weight: 600; }
+.dmc-friendly, .dmc-rc { color: #646970; }
+.dmc-job-list code { background: #fff; }
+
+/* Missing files */
+.dmc-badge-missing { background: #fcf0f1; color: #b32d2e; font-weight: 600; }
+.dmc-missing-help { margin: 0 0 8px; color: #50575e; max-width: 900px; }
+
+/* Help boxes */
+.dmc-help { clear: both; margin: 10px 0 12px; background: #fff; border: 1px solid #dcdcde; border-left: 4px solid #72aee6; padding: 0 14px; max-width: 980px; }
+.dmc-help summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+.dmc-help[open] summary { border-bottom: 1px solid #f0f0f1; margin-bottom: 4px; }
+.dmc-help ul { list-style: disc; margin: 8px 0 12px 20px; }
+.dmc-help li, .dmc-help p { line-height: 1.55; }
+/* Reference removal */
+.dmc-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 0 6px; border-radius: 3px; line-height: 1.7; }
+.dmc-tag-rm { background: #fcf0f1; color: #b32d2e; }
+.dmc-tag-keep { background: #f0f6fc; color: #135e96; }
+.dmc-badge-refs { background: #fcf9e8; color: #6b5300; margin-top: 4px; }
+
+/* Grouped summary */
+.dmc-job-listhead.dmc-g-in_use { color: #135e96; }
+.dmc-job-listhead.dmc-g-error { color: #b32d2e; }
+.dmc-job-listhead.dmc-g-moved_note, .dmc-job-listhead.dmc-g-info { color: #50575e; font-weight: 600; }
+.dmc-job-listhead.dmc-g-removed, .dmc-job-listhead.dmc-g-would { color: #b32d2e; }
+.dmc-job-list + .dmc-job-listhead { margin-top: 16px; }
