@@ -236,8 +236,8 @@ class DMC_Admin {
 		$t   = DMC_DB::tables();
 		$s   = DMC_Util::settings();
 
-		if ( DMC_Scanner::is_running() && in_array( $op, array( 'trash', 'trash_force', 'trash_missing', 'trash_missing_unlink', 'trash_all', 'trash_missing_all', 'trash_missing_unlink_all', 'ignore', 'unignore' ), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'A scan is running. Wait for it to finish.', 'deep-media-cleaner' ) ) );
+		if ( ! DMC_Scanner::results_ready() && in_array( $op, array( 'trash', 'trash_force', 'trash_missing', 'trash_missing_unlink', 'trash_all', 'trash_missing_all', 'trash_missing_unlink_all', 'ignore', 'unignore' ), true ) ) {
+			wp_send_json_error( array( 'message' => DMC_Scanner::is_running() ? __( 'A scan is running. Wait for it to finish.', 'deep-media-cleaner' ) : __( 'The last scan did not finish. Run a new scan first.', 'deep-media-cleaner' ) ) );
 		}
 		if ( function_exists( 'set_time_limit' ) ) {
 			@set_time_limit( 120 ); // phpcs:ignore
@@ -711,7 +711,15 @@ class DMC_Admin {
 
 	public static function media_column_value( $col, $id ) {
 		global $wpdb;
+		static $ready = null;
 		if ( 'dmc_usage' !== $col ) {
+			return;
+		}
+		if ( null === $ready ) {
+			$ready = DMC_Scanner::results_ready();
+		}
+		if ( ! $ready ) {
+			echo '<span class="description">' . esc_html__( 'Not scanned', 'deep-media-cleaner' ) . '</span>';
 			return;
 		}
 		$t   = DMC_DB::tables();
