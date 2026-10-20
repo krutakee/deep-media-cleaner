@@ -105,6 +105,7 @@ class DMC_Util {
 					'wp-staging*',
 					'mailpoet*',
 					'wpcode*',
+					'sb-instagram-feed-images', // Smash Balloon builds these names at runtime.
 				)
 			),
 			'orphan_exts'       => 'jpg jpeg jpe png gif webp avif bmp tif tiff ico svg heic mp4 m4v mov webm ogv avi wmv mpg mpeg mp3 m4a wav ogg oga flac pdf doc docx ppt pptx pps ppsx xls xlsx odt ods odp hwp hwpx zip',
