@@ -2,7 +2,7 @@
 
 A WordPress plugin that finds media files that are not used anywhere on the site and moves them to a recycle bin you can restore from.
 
-- **Version:** 1.5.0
+- **Version:** 1.5.1 (see the changelog in `readme.txt`)
 - **Requires:** WordPress 5.8+, PHP 7.4+
 - **License:** GPL-2.0-or-later
 

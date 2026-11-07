@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Deep Media Cleaner
  * Description:       Finds media files that are not used anywhere on the site (posts, page builders, meta, options, widgets, custom database tables, theme files and the uploads folder itself) and moves them to a recycle bin you can restore from.
- * Version:           1.5.0
+ * Version:           1.5.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Stan Han
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'DMC_VERSION', '1.5.0' );
+define( 'DMC_VERSION', '1.5.1' );
 define( 'DMC_FILE', __FILE__ );
 define( 'DMC_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DMC_URL', plugin_dir_url( __FILE__ ) );

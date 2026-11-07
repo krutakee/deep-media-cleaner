@@ -47,6 +47,7 @@ class DMC_CLI {
 	 */
 	public function stats() {
 		global $wpdb;
+		$this->require_results();
 		$t    = DMC_DB::tables();
 		$rows = $wpdb->get_results( "SELECT is_used, item_type, COUNT(*) n, COALESCE(SUM(size),0) s FROM `{$t['results']}` GROUP BY is_used, item_type ORDER BY is_used, item_type", ARRAY_A ); // phpcs:ignore
 		$map  = array( 'unused', 'used', 'ignored' );
@@ -87,6 +88,7 @@ class DMC_CLI {
 	 */
 	public function list_( $args, $assoc ) {
 		global $wpdb;
+		$this->require_results();
 		$t    = DMC_DB::tables();
 		$map  = array(
 			'unused'  => 0,
@@ -118,6 +120,7 @@ class DMC_CLI {
 	 */
 	public function trash( $args, $assoc ) {
 		global $wpdb;
+		$this->require_results();
 		$t   = DMC_DB::tables();
 		$ids = array_map( 'absint', $args );
 		if ( ! empty( $assoc['all'] ) ) {
@@ -216,6 +219,16 @@ class DMC_CLI {
 			}
 		}
 		WP_CLI::success( "{$ok} item(s) deleted permanently." );
+	}
+
+	/** Stop unless the results come from a finished scan. */
+	private function require_results() {
+		if ( DMC_Scanner::is_running() ) {
+			WP_CLI::error( 'A scan is running or was interrupted. Run `wp dmc scan` to complete a new one.' );
+		}
+		if ( ! DMC_Scanner::results_ready() ) {
+			WP_CLI::error( 'No finished scan. Run `wp dmc scan` first.' );
+		}
 	}
 
 	private function bin_ids( $args, $assoc ) {

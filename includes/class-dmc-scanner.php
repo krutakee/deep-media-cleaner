@@ -47,6 +47,15 @@ class DMC_Scanner {
 		return ! empty( $s['running'] );
 	}
 
+	/**
+	 * True when the results table holds a finished scan. A running, cancelled
+	 * or crashed scan leaves every library item marked unused until the last
+	 * step runs, so nothing may be moved from such results.
+	 */
+	public static function results_ready() {
+		return ! self::is_running() && is_array( get_option( 'dmc_last_scan' ) );
+	}
+
 	/* ------------------------------------------------------------------ */
 
 	public static function start() {
@@ -57,6 +66,8 @@ class DMC_Scanner {
 		foreach ( array( 'refs', 'attfiles', 'results' ) as $k ) {
 			$wpdb->query( "TRUNCATE TABLE `{$t[$k]}`" ); // phpcs:ignore
 		}
+		// The old results are gone; until finish() runs there are no valid ones.
+		delete_option( 'dmc_last_scan' );
 		$s = DMC_Util::settings();
 
 		$steps = array(

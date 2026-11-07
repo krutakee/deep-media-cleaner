@@ -74,9 +74,30 @@ class DMC_Bin {
 		@rmdir( $real ); // phpcs:ignore
 	}
 
+	/**
+	 * True when $rel is any file (main, size, original, backup) of another
+	 * library item. "logo.svg" and "logo.png" share a base name, so the
+	 * leftover sweep below would otherwise take logo.png's thumbnails.
+	 */
+	private static function owned_by_other( $rel, $id ) {
+		global $wpdb;
+		$owners = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE post_id <> %d AND meta_key IN ('_wp_attached_file','_wp_attachment_metadata','_wp_attachment_backup_sizes') AND meta_value LIKE %s",
+				$id,
+				'%' . $wpdb->esc_like( wp_basename( $rel ) ) . '%'
+			)
+		);
+		foreach ( $owners as $other ) {
+			if ( in_array( $rel, DMC_Util::attachment_files( (int) $other ), true ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** Main files + leftover size variants (e.g. from an old theme) of an attachment. */
 	public static function attachment_bundle( $id ) {
-		global $wpdb;
 		$files = DMC_Util::attachment_files( $id );
 		if ( ! $files ) {
 			return $files;
@@ -104,8 +125,7 @@ class DMC_Bin {
 				}
 				foreach ( array_keys( $bases ) as $b ) {
 					if ( preg_match( '/^' . preg_quote( $b, '/' ) . '(-\d+x\d+)?(\.[a-z0-9]{2,5}){1,2}$/i', $e ) ) {
-						$other = $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value = %s AND post_id <> %d LIMIT 1", $rel, $id ) );
-						if ( ! $other ) {
+						if ( ! self::owned_by_other( $rel, $id ) ) {
 							$files[]       = $rel;
 							$known[ $rel ] = true;
 						}

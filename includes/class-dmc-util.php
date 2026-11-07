@@ -26,6 +26,12 @@ class DMC_Util {
 
 	const BASE_EXTS = 'jpg jpeg jpe png gif webp avif bmp tif tiff ico svg heic heif mp4 m4v mov webm ogv avi wmv mpg mpeg 3gp mp3 m4a wav ogg oga flac aac pdf doc docx ppt pptx pps ppsx xls xlsx odt ods odp rtf hwp hwpx zip psd key ttf otf woff woff2 eot html htm txt csv json xml vtt srt epub rar 7z gz';
 
+	/** Upper bound on nodes visited while walking one stored value. */
+	const MAX_WALK_NODES = 200000;
+
+	private static $walk_seen  = array();
+	private static $walk_nodes = 0;
+
 	private static $settings = null;
 	private static $ext_re   = null;
 	private static $exts     = null;
@@ -99,6 +105,7 @@ class DMC_Util {
 					'wp-staging*',
 					'mailpoet*',
 					'wpcode*',
+					'sb-instagram-feed-images', // Smash Balloon builds these names at runtime.
 				)
 			),
 			'orphan_exts'       => 'jpg jpeg jpe png gif webp avif bmp tif tiff ico svg heic mp4 m4v mov webm ogv avi wmv mpg mpeg mp3 m4a wav ogg oga flac pdf doc docx ppt pptx pps ppsx xls xlsx odt ods odp hwp hwpx zip',
@@ -254,7 +261,7 @@ class DMC_Util {
 	public static function exts() {
 		if ( null === self::$exts ) {
 			$s    = self::settings();
-			$list = array_merge( preg_split( '/[\s,]+/', self::BASE_EXTS ), preg_split( '/[\s,.]+/', strtolower( $s['orphan_exts'] ) ) );
+			$list = array_merge( preg_split( '/[\s,]+/', self::BASE_EXTS ), preg_split( '/[\s,.]+/', strtolower( $s['orphan_exts'] ) ), self::library_exts() );
 			$list = array_values( array_unique( array_filter( array_map( 'trim', $list ) ) ) );
 			usort(
 				$list,
@@ -265,6 +272,22 @@ class DMC_Util {
 			self::$exts = $list;
 		}
 		return self::$exts;
+	}
+
+	/**
+	 * Extensions of files in the media library. A link to a library item with
+	 * an extension missing from the lists above (e.g. ".pages") would never be
+	 * recognised, and the item would look unused.
+	 */
+	private static function library_exts() {
+		global $wpdb;
+		$out = array();
+		foreach ( (array) $wpdb->get_col( "SELECT DISTINCT LOWER(SUBSTRING_INDEX(meta_value, '.', -1)) FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file'" ) as $e ) {
+			if ( preg_match( '/^(?=[a-z0-9]*[a-z])[a-z0-9]{2,5}$/', (string) $e ) ) {
+				$out[] = $e;
+			}
+		}
+		return $out;
 	}
 
 	public static function ext_re() {
@@ -410,8 +433,10 @@ class DMC_Util {
 		if ( ! preg_match( '~\.(?:' . $ext . ')(?![a-z0-9])~i', $text ) ) {
 			return;
 		}
-		$u       = self::uploads();
-		$path_re = '~(?:' . $u['alts'] . ')/([^\s"\'<>()\[\]{}|\\\\^`,;?#*=]+?\.(?:' . $ext . '))(?![a-z0-9])~i';
+		$u = self::uploads();
+		// Greedy, then back off to the last extension: "Resume.docx-2.pdf" must
+		// not stop at ".docx" (a lazy match did, so the file looked unused).
+		$path_re = '~(?:' . $u['alts'] . ')/([^\s"\'<>()\[\]{}|\\\\^`,;?#*=]+\.(?:' . $ext . '))(?![a-z0-9])~i';
 		if ( preg_match_all( $path_re, $text, $m ) ) {
 			foreach ( $m[1] as $rel ) {
 				$rel = ltrim( preg_replace( '~/{2,}~', '/', rawurldecode( $rel ) ), '/' );
@@ -422,7 +447,7 @@ class DMC_Util {
 		}
 		// Anything else that looks like a media file name (relative URLs, CDN
 		// rewrites, CSS, plain text). Matched by name only = conservative.
-		$bare_re = '~([^\s"\'<>()\[\]{}|\\\\^`,;?#*=/:]+?\.(?:' . $ext . '))(?![a-z0-9])~i';
+		$bare_re = '~([^\s"\'<>()\[\]{}|\\\\^`,;?#*=/:]+\.(?:' . $ext . '))(?![a-z0-9])~i';
 		if ( preg_match_all( $bare_re, $text, $m ) ) {
 			foreach ( $m[1] as $name ) {
 				$stem = self::stem( $name );
@@ -443,8 +468,22 @@ class DMC_Util {
 	 * @param bool $numeric_any Treat a bare number as an attachment ID even if the key does not look media-related.
 	 */
 	public static function walk( $value, $path, array &$refs, $source, $numeric_any = false, $depth = 0 ) {
-		if ( $depth > 25 ) {
+		if ( 0 === $depth ) {
+			self::$walk_seen  = array();
+			self::$walk_nodes = 0;
+		}
+		// Serialized objects can point back to themselves (r:/R: references, e.g.
+		// Duplicator's package option); without these guards the walk revisits
+		// the same branches millions of times and the scan never finishes.
+		if ( $depth > 25 || ++self::$walk_nodes > self::MAX_WALK_NODES ) {
 			return;
+		}
+		if ( is_object( $value ) ) {
+			$oid = spl_object_id( $value );
+			if ( isset( self::$walk_seen[ $oid ] ) ) {
+				return;
+			}
+			self::$walk_seen[ $oid ] = true;
 		}
 		if ( is_array( $value ) || is_object( $value ) ) {
 			// Numbers inside serialized arrays (ACF galleries, repeaters…) inherit
